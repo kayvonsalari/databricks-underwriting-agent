@@ -1,0 +1,16 @@
+STADTBANK LEIPZIG - ACCOUNT STATEMENT
+Account holder:  Jonas Weber
+Period:          01.08.2026 - 31.08.2026
+
+DATE        DESCRIPTION                              AMOUNT (EUR)
+01.08.2026  Opening balance                              4,215.30
+01.08.2026  Rent - Hausverwaltung Mueller               -1,300.00
+03.08.2026  AutoFinanz Bank - car loan instalment         -450.00
+05.08.2026  Supermarket                                    -86.40
+09.08.2026  Mobile phone contract                          -39.99
+12.08.2026  Supermarket                                    -112.75
+15.08.2026  Credit card repayment                         -300.00
+19.08.2026  Petrol station                                 -64.20
+24.08.2026  Restaurant                                     -58.00
+28.08.2026  Salary - Nordwerk Logistik GmbH              3,590.00
+31.08.2026  Closing balance                              5,393.96

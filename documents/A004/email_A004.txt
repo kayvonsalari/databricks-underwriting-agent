@@ -1,0 +1,24 @@
+From: Jonas Weber <jonas.weber@example.com>
+To: applications@example-lender.de
+Date: 2 September 2026
+Subject: Mortgage application - flat purchase
+
+Dear Sir or Madam,
+
+I would like to apply for a mortgage of EUR 320,000 to buy a two-bedroom
+flat at Lindenstrasse 14, 04109 Leipzig. The agreed purchase price, which
+matches the valuation, is EUR 400,000.
+
+I have worked as a project manager at Nordwerk Logistik GmbH for six years.
+My annual salary is about EUR 90,000.
+
+My only regular debt is a credit card, which I pay off at around EUR 300
+a month.
+
+Your indicative offer puts the monthly mortgage repayment at EUR 1,950.
+
+Please find attached my latest payslip, my bank statement for August and
+my credit report.
+
+Kind regards,
+Jonas Weber

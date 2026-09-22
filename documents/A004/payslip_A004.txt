@@ -1,0 +1,21 @@
+NORDWERK LOGISTIK GMBH - PAYSLIP
+Employee:        Jonas Weber
+Employee no.:    10482
+Position:        Project Manager
+Pay period:      August 2026
+
+EARNINGS
+Gross monthly salary                 EUR  5,800.00
+
+DEDUCTIONS
+Income tax                           EUR  1,020.00
+Solidarity surcharge                 EUR      0.00
+Pension insurance                    EUR    539.40
+Health insurance                     EUR    470.00
+Unemployment insurance               EUR     75.40
+Long-term care insurance             EUR    105.20
+Total deductions                     EUR  2,210.00
+
+NET PAY                              EUR  3,590.00
+
+Year to date gross (Jan-Aug 2026)    EUR 46,400.00
