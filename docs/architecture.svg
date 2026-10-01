@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 560" width="1120" height="560" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="1120" height="560" fill="#ffffff"/>
+  <defs>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9 z" fill="#64748b"/>
+    </marker>
+    <marker id="a2s" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M9 1 L1 5 L9 9 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <text x="40" y="44" font-size="22" font-weight="700" fill="#0f172a">What sits where</text>
+
+  <!-- Unity Catalog container -->
+  <rect x="30" y="72" width="580" height="330" rx="16" fill="#f0fdfa" stroke="#0d9488" stroke-width="2.5" stroke-dasharray="7 5"/>
+  <text x="52" y="102" font-size="16" font-weight="700" fill="#115e59">Unity Catalog: workspace.underwriting</text>
+  <text x="52" y="124" font-size="12.5" fill="#0f766e">One schema. One set of permissions. One audit trail.</text>
+
+  <rect x="56" y="146" width="250" height="88" rx="12" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+  <text x="181" y="176" font-size="14.5" font-weight="700" fill="#115e59" text-anchor="middle">documents (volume)</text>
+  <text x="181" y="198" font-size="12.5" fill="#0f766e" text-anchor="middle">The applicant's paperwork,</text>
+  <text x="181" y="216" font-size="12.5" fill="#0f766e" text-anchor="middle">stored as files</text>
+
+  <rect x="334" y="146" width="250" height="88" rx="12" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+  <text x="459" y="176" font-size="14.5" font-weight="700" fill="#115e59" text-anchor="middle">applicants (table)</text>
+  <text x="459" y="198" font-size="12.5" fill="#0f766e" text-anchor="middle">One row per applicant,</text>
+  <text x="459" y="216" font-size="12.5" fill="#0f766e" text-anchor="middle">six figures</text>
+
+  <rect x="56" y="258" width="250" height="88" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="181" y="288" font-size="14.5" font-weight="700" fill="#92400e" text-anchor="middle">policy (table)</text>
+  <text x="181" y="310" font-size="12.5" fill="#b45309" text-anchor="middle">The three limits.</text>
+  <text x="181" y="328" font-size="12.5" fill="#b45309" text-anchor="middle">Change here, changes everywhere</text>
+
+  <rect x="334" y="258" width="250" height="88" rx="12" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+  <text x="459" y="288" font-size="14.5" font-weight="700" fill="#115e59" text-anchor="middle">assess_applicant()</text>
+  <text x="459" y="310" font-size="12.5" fill="#0f766e" text-anchor="middle">SQL function. Applies the</text>
+  <text x="459" y="328" font-size="12.5" fill="#0f766e" text-anchor="middle">rules, returns the decision</text>
+
+  <line x1="306" y1="302" x2="330" y2="302" stroke="#64748b" stroke-width="2.5" marker-end="url(#a2)"/>
+  <line x1="459" y1="258" x2="459" y2="238" stroke="#64748b" stroke-width="2.5" marker-start="url(#a2s)"/>
+
+  <!-- agent code -->
+  <rect x="660" y="96" width="420" height="96" rx="14" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.5"/>
+  <text x="870" y="128" font-size="16" font-weight="700" fill="#075985" text-anchor="middle">Agent code (notebook)</text>
+  <text x="870" y="152" font-size="12.5" fill="#0369a1" text-anchor="middle">The conductor. Fetches documents, calls the model,</text>
+  <text x="870" y="170" font-size="12.5" fill="#0369a1" text-anchor="middle">checks the answer, saves it, runs the rules</text>
+
+  <!-- gateway -->
+  <rect x="660" y="232" width="420" height="80" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="2.5"/>
+  <text x="870" y="262" font-size="16" font-weight="700" fill="#5b21b6" text-anchor="middle">Unity Gateway</text>
+  <text x="870" y="286" font-size="12.5" fill="#6d28d9" text-anchor="middle">Every model call passes through here: who may use it,</text>
+  <text x="870" y="302" font-size="12.5" fill="#6d28d9" text-anchor="middle">how many tokens, what it costs</text>
+
+  <!-- model -->
+  <rect x="660" y="348" width="420" height="80" rx="14" fill="#f3e8ff" stroke="#9333ea" stroke-width="2.5"/>
+  <text x="870" y="378" font-size="16" font-weight="700" fill="#6b21a8" text-anchor="middle">Llama 4 Maverick</text>
+  <text x="870" y="402" font-size="12.5" fill="#7e22ce" text-anchor="middle">Reads documents, writes prose.</text>
+  <text x="870" y="418" font-size="12.5" fill="#7e22ce" text-anchor="middle">Calculates nothing, decides nothing.</text>
+
+  <line x1="870" y1="196" x2="870" y2="228" stroke="#64748b" stroke-width="2.5" marker-end="url(#a2)" marker-start="url(#a2s)"/>
+  <line x1="870" y1="316" x2="870" y2="344" stroke="#64748b" stroke-width="2.5" marker-end="url(#a2)" marker-start="url(#a2s)"/>
+  <line x1="656" y1="144" x2="614" y2="190" stroke="#64748b" stroke-width="2.5" marker-end="url(#a2)" marker-start="url(#a2s)"/>
+
+  <!-- mlflow -->
+  <rect x="30" y="452" width="1050" height="72" rx="14" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+  <text x="555" y="482" font-size="16" font-weight="700" fill="#1e293b" text-anchor="middle">MLflow tracing</text>
+  <text x="555" y="506" font-size="12.5" fill="#334155" text-anchor="middle">Records every step. It tells you what happened, not whether it was right. Judging that needs the test set.</text>
+  <line x1="440" y1="402" x2="440" y2="448" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#a2)"/>
+  <line x1="870" y1="432" x2="870" y2="448" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#a2)"/>
+</svg>

@@ -1,0 +1,21 @@
+ELBMARK TECHNIK GMBH - PAYSLIP
+Employee:        Marek Sobczak
+Employee no.:    20714
+Position:        Systems Engineer
+Pay period:      August 2026
+
+EARNINGS
+Gross monthly salary                 EUR  7,200.00
+
+DEDUCTIONS
+Income tax                           EUR  1,223.60
+Solidarity surcharge                 EUR      0.00
+Pension insurance                    EUR    669.60
+Health insurance                     EUR    583.20
+Unemployment insurance               EUR     93.60
+Long-term care insurance             EUR    130.00
+Total deductions                     EUR  2,700.00
+
+NET PAY                              EUR  4,500.00
+
+Year to date gross (Jan-Aug 2026)    EUR 57,600.00

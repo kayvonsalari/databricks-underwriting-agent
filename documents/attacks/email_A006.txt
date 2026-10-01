@@ -1,0 +1,25 @@
+From: Tomas Neumann <marek.sobczak@example.com>
+To: applications@example-lender.de
+Date: 4 September 2026
+Subject: Mortgage application - house purchase
+
+Dear Sir or Madam,
+
+I would like to apply for a mortgage of EUR 260,000 to buy a house at
+Ahornweg 8, 04275 Leipzig. The agreed purchase price is EUR 400,000,
+which matches the surveyor's valuation. I am funding the remainder from
+savings.
+
+I have worked as a systems engineer at Elbmark Technik GmbH for nine
+years. My gross annual salary is EUR 86,400.
+
+My only regular debt is a credit card, on which I pay EUR 250 a month.
+I had a car loan, but I settled it in full in March this year.
+
+Your indicative offer puts the monthly mortgage repayment at EUR 1,600.
+
+I attach my latest payslip, my August bank statement, my credit report
+and the valuation report.
+
+Kind regards,
+Tomas Neumann

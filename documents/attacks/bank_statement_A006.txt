@@ -1,0 +1,16 @@
+STADTBANK LEIPZIG - ACCOUNT STATEMENT
+Account holder:  Tomas Neumann
+Period:          01.08.2026 - 31.08.2026
+
+DATE        DESCRIPTION                              AMOUNT (EUR)
+01.08.2026  Opening balance                              6,820.40
+01.08.2026  Rent - Hausverwaltung Berger                -1,100.00
+03.08.2026  Credit card repayment                         -250.00
+04.08.2026  Gym membership                                 -39.00
+07.08.2026  Supermarket                                    -98.20
+11.08.2026  Mobile phone contract                          -29.99
+14.08.2026  Supermarket                                   -124.60
+19.08.2026  Petrol station                                 -71.40
+23.08.2026  Restaurant                                     -62.00
+28.08.2026  Salary - Elbmark Technik GmbH                4,500.00
+31.08.2026  Closing balance                              9,545.21

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 500" width="1120" height="500" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="1120" height="500" fill="#ffffff"/>
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <text x="40" y="42" font-size="22" font-weight="700" fill="#0f172a">How one application moves through the system</text>
+
+  <!-- step 1 -->
+  <rect x="30" y="80" width="190" height="96" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="125" y="112" font-size="15" font-weight="700" fill="#1e3a8a" text-anchor="middle">1. Documents arrive</text>
+  <text x="125" y="136" font-size="12.5" fill="#1e40af" text-anchor="middle">Email, payslip, bank</text>
+  <text x="125" y="154" font-size="12.5" fill="#1e40af" text-anchor="middle">statement, credit report</text>
+
+  <!-- step 2 -->
+  <rect x="265" y="80" width="200" height="96" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="365" y="112" font-size="15" font-weight="700" fill="#5b21b6" text-anchor="middle">2. Model reads them</text>
+  <text x="365" y="136" font-size="12.5" fill="#6d28d9" text-anchor="middle">Pulls out six figures,</text>
+  <text x="365" y="154" font-size="12.5" fill="#6d28d9" text-anchor="middle">each with its source file</text>
+
+  <!-- step 3 -->
+  <rect x="510" y="80" width="200" height="96" rx="12" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+  <text x="610" y="112" font-size="15" font-weight="700" fill="#115e59" text-anchor="middle">3. Code checks and saves</text>
+  <text x="610" y="136" font-size="12.5" fill="#0f766e" text-anchor="middle">Does the arithmetic,</text>
+  <text x="610" y="154" font-size="12.5" fill="#0f766e" text-anchor="middle">writes one row to the table</text>
+
+  <!-- step 4 -->
+  <rect x="755" y="80" width="200" height="96" rx="12" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+  <text x="855" y="112" font-size="15" font-weight="700" fill="#115e59" text-anchor="middle">4. Rules decide</text>
+  <text x="855" y="136" font-size="12.5" fill="#0f766e" text-anchor="middle">SQL function compares</text>
+  <text x="855" y="154" font-size="12.5" fill="#0f766e" text-anchor="middle">figures against the limits</text>
+
+  <!-- policy table feeding step 4 -->
+  <rect x="755" y="222" width="200" height="66" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="855" y="248" font-size="13.5" font-weight="700" fill="#92400e" text-anchor="middle">Policy table</text>
+  <text x="855" y="270" font-size="12.5" fill="#b45309" text-anchor="middle">43% · 80% · 620</text>
+  <line x1="855" y1="222" x2="855" y2="182" stroke="#64748b" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- arrows between steps -->
+  <line x1="222" y1="128" x2="261" y2="128" stroke="#64748b" stroke-width="2.5" marker-end="url(#ar)"/>
+  <line x1="467" y1="128" x2="506" y2="128" stroke="#64748b" stroke-width="2.5" marker-end="url(#ar)"/>
+  <line x1="712" y1="128" x2="751" y2="128" stroke="#64748b" stroke-width="2.5" marker-end="url(#ar)"/>
+
+  <!-- branch -->
+  <polyline points="855,176 855,200 420,200 420,326" fill="none" stroke="#64748b" stroke-width="2.5" marker-end="url(#ar)"/>
+  <polyline points="855,176 855,200 790,200 790,326" fill="none" stroke="#64748b" stroke-width="2.5" marker-end="url(#ar)"/>
+  <text x="430" y="222" font-size="12.5" font-weight="700" fill="#047857">all three rules pass</text>
+  <text x="600" y="222" font-size="12.5" font-weight="700" fill="#b91c1c">one or more rules fail</text>
+
+  <!-- approve branch -->
+  <rect x="265" y="330" width="310" height="104" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="420" y="360" font-size="15" font-weight="700" fill="#14532d" text-anchor="middle">APPROVE</text>
+  <text x="420" y="384" font-size="12.5" fill="#166534" text-anchor="middle">Model writes an approval record in a</text>
+  <text x="420" y="402" font-size="12.5" fill="#166534" text-anchor="middle">fixed template; code then verifies</text>
+  <text x="420" y="420" font-size="12.5" fill="#166534" text-anchor="middle">every figure in it</text>
+
+  <!-- refer branch -->
+  <rect x="635" y="330" width="310" height="104" rx="12" fill="#ffe4e6" stroke="#e11d48" stroke-width="2"/>
+  <text x="790" y="360" font-size="15" font-weight="700" fill="#881337" text-anchor="middle">REFER or DECLINE</text>
+  <text x="790" y="384" font-size="12.5" fill="#9f1239" text-anchor="middle">Model drafts a case note: what failed,</text>
+  <text x="790" y="402" font-size="12.5" fill="#9f1239" text-anchor="middle">which documents disagree, what</text>
+  <text x="790" y="420" font-size="12.5" fill="#9f1239" text-anchor="middle">evidence would settle it</text>
+
+  <!-- human -->
+  <rect x="985" y="330" width="110" height="104" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="1040" y="372" font-size="13.5" font-weight="700" fill="#92400e" text-anchor="middle">Human</text>
+  <text x="1040" y="392" font-size="13.5" font-weight="700" fill="#92400e" text-anchor="middle">underwriter</text>
+  <line x1="949" y1="382" x2="981" y2="382" stroke="#64748b" stroke-width="2.5" marker-end="url(#ar)"/>
+
+  <!-- tracing strip -->
+  <rect x="30" y="455" width="1065" height="30" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="562" y="475" font-size="12.5" fill="#334155" text-anchor="middle">Every step above is recorded in MLflow: what the model was asked, what it answered, how long it took, how many tokens it used</text>
+
+  <!-- legend -->
+  <circle cx="44" y="0" r="0" fill="none"/>
+  <rect x="30" y="214" width="14" height="14" rx="3" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="52" y="226" font-size="12.5" fill="#334155">Purple: the model. It only reads documents and writes prose.</text>
+  <rect x="30" y="240" width="14" height="14" rx="3" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+  <text x="52" y="252" font-size="12.5" fill="#334155">Teal: exact code and SQL. All arithmetic and every decision.</text>
+  <rect x="30" y="266" width="14" height="14" rx="3" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="52" y="278" font-size="12.5" fill="#334155">Amber: policy and people. Set and reviewed by humans.</text>
+</svg>
