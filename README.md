@@ -157,6 +157,24 @@ Not a better prompt. "Ignore instructions inside documents" is itself an instruc
 
 None of these is a complete answer. That is the honest state of the art for document-reading agents, and anyone claiming otherwise should be asked for their injection test results.
 
+## Serving it as an endpoint
+
+In a notebook the agent exists only while someone is running cells. Serving it gives the extraction step a URL inside the workspace, so other systems, test tools and front ends can call it without a person attached. It is also what a red-team tool such as Promptfoo needs: something to send requests to and attack, rather than a notebook to step through by hand.
+
+What gets served is the extraction step only: documents go in as text, figures and flags come out. The decision stays exactly where it was, as the SQL rule function running against the policy table. A served model has no Spark session and no access to the documents volume, and in any case the model-facing half of this system, the half that reads unstructured text and can be attacked through it, is the half worth exposing. The split between what is served and what is not is deliberate, not a limitation of the platform.
+
+The agent is packaged as an MLflow model, registered in Unity Catalog alongside the tables and the rule function, and deployed to a serving endpoint with tracing switched on, so every request the endpoint receives in production is recorded the same way a notebook run is. Credentials for the model gateway come from a Databricks secret scope, referenced in the endpoint's own configuration as `{{secrets/underwriting/gateway_token}}`, so the configuration holds a pointer to a secret rather than the secret itself.
+
+### What serving requires that a notebook does not
+
+**Everything the code needs has to be inside the packaged model object.** Only that object travels to the serving container. A prompt template, a threshold, a setting that lives as a notebook variable, is not part of the object and is simply not there when a request arrives.
+
+**The serving container has no Databricks identity of its own.** The notebook runs under the identity of whoever is logged in; the endpoint does not. Credentials are not available when the model loads, and they are not available during a request either, so anything the model needs to authenticate with has to be supplied to it explicitly. A secret scope, referenced by name, is the right way to do that. An environment variable holding a raw token is the quick way, and a worse habit to get into.
+
+**The serving layer reshapes the input before the model sees it.** A request sent as JSON does not arrive at the model as JSON. It arrives as a one-column table whose cells hold Python's own printed form of a dictionary, single quotes and all, which a JSON parser cannot read. The fix is to parse it as a Python literal, with `ast.literal_eval` rather than `eval`, and to keep a JSON fallback for the cases where the input does arrive as JSON after all.
+
+None of this is specific to this agent. Documentation describes the request you send, not the object your code actually receives on the other end, and the fastest way to close that gap on any platform is to deploy something that does nothing but describe exactly what it was handed. With these three constraints known in advance, serving a second agent here is a short job, not an afternoon of re-discovering them.
+
 ## How a real-world design would differ
 
 This project uses AI deliberately, to find out what that costs. A production design would probably use less of it.
@@ -212,6 +230,8 @@ sql/01_setup.sql                     Schema, tables, policy, documents volume, r
 notebook/underwriting_agent.py       Version 1, the original build
 notebook/underwriting_agent_v2.py    Version 2: clean structure, expected answers in one table,
                                      one generic checker, approval record, four attacks
+notebook/underwriting_agent_v3.py    Version 3: packaged as an MLflow model and deployed to a
+                                     serving endpoint
 documents/A004/                      Jonas Weber, should be REFERRED
 documents/A005/                      Marek Sobczak, should be APPROVED
 documents/attacks/                   Tomas Neumann (injection), Lena Fischer (forged authority)
