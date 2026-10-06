@@ -1,12 +1,10 @@
 # Mortgage underwriting agent on Databricks
 
-An agent that reads a mortgage applicant's paperwork, pulls out the figures a lender needs, flags anything that does not add up, and then hands the decision to exact code rather than to the AI.
+Lenders get mortgage applications as a pile of paperwork: a covering email, a payslip, a bank statement, a credit report. Someone has to read all of it, pull out the handful of numbers that matter, notice anything that does not add up, and then apply the lending rules. The reading is slow. The rules are not.
 
-This is a working reference implementation of a governed document-to-decision agent, built to test two things: whether the platform's governance story holds up when an agent is actually built on it, and whether the common claim that agents are transforming document-heavy back office work survives an adversarial test.
+This is a working example of how to split that job: an AI reads the documents and pulls out the figures, and ordinary code applies the rules and makes the decision. It runs on Databricks, so the paperwork, the figures, the lending rules and the record of every step all sit in one place with one set of permissions.
 
-On the first, the platform does some things well, and they are concrete. The data, the documents, the lending rules, the model service and the audit trail all sit in one Unity Catalog schema under one permission model. MLflow records every model call, every tool result and every live request to the served endpoint, without that recording having to be built. That combination is the real argument for the platform, and it is a procurement argument rather than a developer-experience one.
-
-The counterweight is that recording is not the same as checking. The findings below include an attack that succeeded and a failure mode that the platform's own tooling reports without judging. The findings turned out to be more interesting than the demo.
+I built it to answer two questions. Does the governance actually hold up once there is an AI in the middle, or does it only look good in a diagram? And is the AI reliable enough to be trusted with the reading, including when someone sends paperwork designed to fool it?
 
 **The headline result.** I attacked the finished system four ways. Three attacks aimed at the rules, the database and the chat all bounced off. One attack, a few lines of text hidden at the bottom of a payslip, worked on the first attempt. It changed a figure in the lending decision and switched off the warnings that would have exposed it.
 
