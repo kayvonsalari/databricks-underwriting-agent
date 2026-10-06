@@ -2,7 +2,11 @@
 
 An agent that reads a mortgage applicant's paperwork, pulls out the figures a lender needs, flags anything that does not add up, and then hands the decision to exact code rather than to the AI.
 
-I built it partly to learn Databricks and partly to test a claim I keep hearing: that AI agents are transforming document-heavy back office work. The findings turned out to be more interesting than the demo.
+This is a working reference implementation of a governed document-to-decision agent, built to test two things: whether the platform's governance story holds up when an agent is actually built on it, and whether the common claim that agents are transforming document-heavy back office work survives an adversarial test.
+
+On the first, the platform does some things well, and they are concrete. The data, the documents, the lending rules, the model service and the audit trail all sit in one Unity Catalog schema under one permission model. MLflow records every model call, every tool result and every live request to the served endpoint, without that recording having to be built. That combination is the real argument for the platform, and it is a procurement argument rather than a developer-experience one.
+
+The counterweight is that recording is not the same as checking. The findings below include an attack that succeeded and a failure mode that the platform's own tooling reports without judging. The findings turned out to be more interesting than the demo.
 
 **The headline result.** I attacked the finished system four ways. Three attacks aimed at the rules, the database and the chat all bounced off. One attack, a few lines of text hidden at the bottom of a payslip, worked on the first attempt. It changed a figure in the lending decision and switched off the warnings that would have exposed it.
 
@@ -20,7 +24,7 @@ In words:
 2. **The AI reads them** and pulls out six figures: income, monthly debts, the mortgage payment, the loan amount, the property value and the credit score. Every figure is recorded with the file it came from. The AI copies figures; it never calculates.
 3. **Code checks and saves.** It does the arithmetic (income times twelve, debts added up), refuses anything incomplete, and writes one row to a table.
 4. **The rules decide.** A SQL function compares those figures against limits held in a policy table and returns APPROVE, REFER or DECLINE. The AI has no say in this and cannot change the limits.
-5. **Then one of two things.** On an approval, the AI writes an approval record in a fixed template, and code checks every figure in it. On anything else, it drafts a case note for a human underwriter: what failed, which documents disagree, and what evidence would settle it. It never recommends approving or declining.
+5. **Then one of two things.** The decision is already made at this point, and the AI is only asked to write it up. On an approval, the AI writes an approval record in a fixed template, and code checks every figure in it. On anything else, it drafts a case note for a human underwriter: what failed, which documents disagree, and what evidence would settle it. It never recommends approving or declining.
 
 ## The lending rules
 
@@ -141,7 +145,7 @@ Three things are worth drawing out.
 They aimed at parts of the system the AI cannot reach.
 
 - The **hostile reference number** was stopped by the way the code talks to the database. Values are passed separately from the query itself, so a command buried in a value is treated as plain text. Databases have had a hard wall between instructions and data for fifty years.
-- The **forged letter** asked the AI to return APPROVE and treat the limits as raised. The AI does not decide anything, and the limits sit in a table it cannot write to. The architecture defeated this, not the AI's judgement.
+- The **forged letter** told the AI to return APPROVE and treat the limits as raised. The system does produce an APPROVE outcome, but the language model plays no part in producing it. The decision string comes from the SQL function, working from figures held in a table and limits held in the policy table, and the model can write to neither. By the time the model sees the word APPROVE, the decision has already been made and the model is only being asked to write it up. So the letter failed structurally, not through the model's judgement: it instructed the model to return APPROVE, and the model has no mechanism to return anything of the sort.
 - The **pushy broker** asked for a figure that appears in no document. Worth noticing: this is the same attack as the injection, delivered through the chat instead of inside a payslip. The chat version failed and the document version worked, which suggests the AI trusts what it reads in a document more than what it is told directly.
 
 **The pattern.** Exact components defend themselves. The AI does not. Everywhere the design keeps the AI out of a decision, the system holds. The one place the AI has to be trusted, reading the documents, is wide open.
