@@ -248,3 +248,23 @@ documents/attacks/                   Tomas Neumann (injection), Lena Fischer (fo
 ---
 
 Built by Kayvon Salari. Enterprise, data and AI architecture.
+
+## Testing the extraction step
+
+A Promptfoo suite checks the AI's extraction step (not the SQL rules) against the documents in `documents/`: one test per applicant, with exact expected figures. The A006 test (hidden instructions in a payslip) is a known failure and is expected to fail.
+
+One-time setup, in PowerShell (set both for the current window; the token is never stored in the repo):
+
+```powershell
+npm install
+$env:DATABRICKS_HOST = "https://<your-workspace>.cloud.databricks.com"   # no trailing slash
+$env:DATABRICKS_GATEWAY_TOKEN = "<your token>"
+```
+
+Run everything with one command:
+
+```powershell
+npm run eval
+```
+
+The extraction prompt lives in `prompts/extraction_prompt.txt`; both the notebook and the tests read that single copy.

@@ -1,0 +1,24 @@
+{
+  "name": "databricks-underwriting-agent",
+  "version": "1.0.0",
+  "description": "Lenders get mortgage applications as a pile of paperwork: a covering email, a payslip, a bank statement, a credit report. Someone has to read all of it, pull out the handful of numbers that matter, notice anything that does not add up, and then apply the lending rules. The reading is slow. The rules are not.",
+  "scripts": {
+    "eval": "promptfoo eval -c promptfooconfig.yaml --no-cache --no-progress-bar"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kayvonsalari/databricks-underwriting-agent.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/kayvonsalari/databricks-underwriting-agent/issues"
+  },
+  "homepage": "https://github.com/kayvonsalari/databricks-underwriting-agent#readme",
+  "devDependencies": {
+    "promptfoo": "^0.125.1"
+  },
+  "private": true
+}
