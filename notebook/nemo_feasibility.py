@@ -37,9 +37,11 @@ RUN_BUDGET_USD = 0.10
 #            (needs an NVIDIA API key in a Databricks secret, see cell 9).
 CHECKS = "free"
 
-# NVIDIA's hosted content safety model. The older name,
-# nvidia/llama-3.1-nemoguard-8b-content-safety, was retired on 16 Nov 2026.
-NVIDIA_SAFETY_MODEL = "nvidia/nemotron-3.5-content-safety"
+# NVIDIA's hosted content safety model. Tried on 26 Nov 2026:
+#   nvidia/llama-3.1-nemoguard-8b-content-safety   retired on 16 Nov 2026 (410)
+#   nvidia/nemotron-3.5-content-safety             listed, but 404 for a trial account
+#   nvidia/llama-3.1-nemotron-safety-guard-8b-v3   works
+NVIDIA_SAFETY_MODEL = "nvidia/llama-3.1-nemotron-safety-guard-8b-v3"
 
 def _job_parameter(name, default):
     try:
@@ -489,7 +491,15 @@ else:
 
 if CHECKS == "nvidia":
     import requests
-    NVIDIA_KEY = dbutils.secrets.get("underwriting", "nvidia_api_key")
+    _raw_key = dbutils.secrets.get("underwriting", "nvidia_api_key")
+    # A key pasted into a hidden prompt can pick up invisible characters, which
+    # make the web server answer "400 Bad Request". They are removed here, in
+    # memory only, and only the key's shape is reported, never the key.
+    NVIDIA_KEY = "".join(ch for ch in _raw_key if ch.isprintable() and not ch.isspace())
+    record("4 NVIDIA key shape (the key itself is never shown)", lambda: {
+        "stored_length": len(_raw_key), "usable_length": len(NVIDIA_KEY),
+        "invisible_characters_removed": len(_raw_key) - len(NVIDIA_KEY),
+        "starts_with_nvapi": NVIDIA_KEY.startswith("nvapi-")})
 
     def nvidia_post(url, body):
         def go():
