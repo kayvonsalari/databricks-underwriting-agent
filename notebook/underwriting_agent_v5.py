@@ -11,6 +11,8 @@
 # MAGIC New in version 5: three guards around the model (cell 4b).
 # MAGIC - Before the model reads a document, an input rail checks it for hidden
 # MAGIC   instructions. A document that contains them stops the case.
+# MAGIC   A stopped case stays in the applicants table, marked "not processed"
+# MAGIC   with the reason and with no figures.
 # MAGIC - Before figures reach the rule function, plain code checks they are sane.
 # MAGIC - Before an explanation is shown, an output rail checks it gives no reason
 # MAGIC   based on nationality, age, gender, religion or health.
@@ -257,6 +259,30 @@ def ask_model(step, applicant_id, messages, **params):
 # the applicants table never holds a half-finished case, and the case is marked.
 NOT_PROCESSED = "not processed: budget reached"
 CASE_STATUS = {}
+PROCESSED = "processed"
+
+
+def ensure_status_columns():
+    """The applicants table gets two columns the first time this notebook runs:
+    status ('processed', or 'not processed: <why>') and status_reason."""
+    columns = spark.table("workspace.underwriting.applicants").columns
+    if "status" not in columns:
+        spark.sql("ALTER TABLE workspace.underwriting.applicants "
+                  "ADD COLUMNS (status STRING, status_reason STRING)")
+        print("Added columns status and status_reason to the applicants table.")
+
+
+def record_stopped_case(applicant_id, status, reason):
+    """Replace the applicant's row with one that says the case was stopped and why."""
+    spark.sql(
+        "DELETE FROM workspace.underwriting.applicants WHERE applicant_id = :id",
+        args={"id": applicant_id},
+    )
+    spark.sql(
+        """INSERT INTO workspace.underwriting.applicants (applicant_id, status, status_reason)
+           VALUES (:id, :status, :reason)""",
+        args={"id": applicant_id, "status": status, "reason": reason[:2000]},
+    )
 
 def run_case(applicant_id, steps):
     try:
@@ -273,14 +299,14 @@ def run_case(applicant_id, steps):
         print(f"STATUS   {applicant_id}: {NOT_PROCESSED}. No decision was recorded for this case.")
         return None
     except CaseStopped as stop:
-        # A guard stopped the case. Same clean stop: nothing half-finished is kept.
-        spark.sql(
-            "DELETE FROM workspace.underwriting.applicants WHERE applicant_id = :id",
-            args={"id": applicant_id},
-        )
+        # A guard stopped the case. The application stays on record for audit:
+        # one row, marked with the reason, and with no figures in it, so nothing
+        # half-finished or untrusted is kept.
+        record_stopped_case(applicant_id, stop.status, str(stop))
         CASE_STATUS[applicant_id] = stop.status
         print(f"\nSTOPPED  {stop}")
-        print(f"STATUS   {applicant_id}: {stop.status}. No decision was recorded for this case.")
+        print(f"STATUS   {applicant_id}: {stop.status}. No decision was recorded for this case; "
+              "the application stays in the applicants table, marked with this status.")
         return None
 
 # COMMAND ----------
@@ -535,6 +561,8 @@ def require_sane_figures(applicant_id, x):
 
 METER = CostMeter(RUN_BUDGET_USD, PRICE_KEY, PRICE_OVERRIDE_USD_PER_MILLION)
 
+ensure_status_columns()
+
 if SECTIONS != "free":
     run_case("setup", lambda: print(ask_model(
         "connection check", "setup", [{"role": "user", "content": "Reply with the single word: ready"}]
@@ -696,10 +724,11 @@ def save_applicant(applicant_id, x):
     spark.sql(
         """INSERT INTO workspace.underwriting.applicants
            (applicant_id, annual_income, monthly_debts, monthly_mortgage_payment,
-            loan_amount, property_value, credit_score)
-           VALUES (:id, :inc, :debts, :pay, :loan, :value, :score)""",
+            loan_amount, property_value, credit_score, status)
+           VALUES (:id, :inc, :debts, :pay, :loan, :value, :score, :status)""",
         args={
             "id": applicant_id,
+            "status": PROCESSED,
             "inc": annual_income,
             "debts": monthly_debts,
             "pay": int(x["monthly_mortgage_payment"]["value"]),
@@ -712,6 +741,15 @@ def save_applicant(applicant_id, x):
 
 
 def decide(applicant_id):
+    # A stopped case has a row but no figures. The rule function is not asked
+    # about it: with empty figures it would count every rule as failed and
+    # answer DECLINE for an application nobody assessed.
+    marked = spark.sql(
+        "SELECT status FROM workspace.underwriting.applicants WHERE applicant_id = :id",
+        args={"id": applicant_id},
+    ).collect()
+    if marked and (marked[0]["status"] or "").startswith("not processed"):
+        raise ValueError(f"{applicant_id} is marked '{marked[0]['status']}'; the rule function was not called")
     return spark.sql(
         "SELECT * FROM workspace.underwriting.assess_applicant(:id)",
         args={"id": applicant_id},
@@ -1071,12 +1109,61 @@ def run_guardrail_tests(with_model_calls):
     for case, text, expected in INPUT_CASES:
         _note_test("input rail", case, expected, document_blocked("test", case, text))
 
+def test_stopped_case_stays_on_record():
+    """No model call. Two made-up cases are stopped, one by each kind of guard,
+    read back from the table, and then removed again."""
+    def row(test_id):
+        found = spark.sql("SELECT * FROM workspace.underwriting.applicants WHERE applicant_id = :id",
+                          args={"id": test_id}).collect()
+        return [r.asDict() for r in found]
+
+    def note(case, ok, detail):
+        TEST_RESULTS.append({"group": "audit record", "case": case, "expected_blocked": True,
+                             "blocked": ok, "ok": ok})
+        print(f"{'PASS' if ok else 'FAIL'}  audit record   {case:<46}" + ("" if ok else f" [{detail}]"))
+
+    def poisoned():
+        raise InputBlocked("Hidden instructions found in made_up_document.txt.")
+
+    figure_columns = ["annual_income", "monthly_debts", "monthly_mortgage_payment",
+                      "loan_amount", "property_value", "credit_score"]
+    cases = [
+        ("TEST-FIGURES", lambda: save_applicant("TEST-FIGURES", _figures(loan=900_000_000)),
+         FiguresRejected.status, "loan_amount"),
+        ("TEST-INPUT", poisoned, InputBlocked.status, "made_up_document.txt"),
+    ]
+    try:
+        for test_id, steps, status, reason_part in cases:
+            run_case(test_id, steps)
+            run_case(test_id, steps)          # stopped twice: still one row, not two
+            rows = row(test_id)
+            note(f"{test_id}: exactly one row kept", len(rows) == 1, f"{len(rows)} rows")
+            kept = rows[0] if rows else {}
+            note(f"{test_id}: marked '{status}'", kept.get("status") == status, kept.get("status"))
+            note(f"{test_id}: reason recorded", reason_part in (kept.get("status_reason") or ""),
+                 kept.get("status_reason"))
+            note(f"{test_id}: no figures kept", all(kept.get(c) is None for c in figure_columns), kept)
+            try:
+                decide(test_id)
+                refused = False
+            except ValueError:
+                refused = True
+            note(f"{test_id}: rule function not called", refused, "decide() returned a decision")
+    finally:
+        for test_id, *_ in cases:
+            spark.sql("DELETE FROM workspace.underwriting.applicants WHERE applicant_id = :id",
+                      args={"id": test_id})
+            CASE_STATUS.pop(test_id, None)
+
+
 if SECTIONS in ("all", "guardrails"):
     run_case("guardrail tests", lambda: run_guardrail_tests(with_model_calls=True))
+    test_stopped_case_stays_on_record()
 elif SECTIONS == "free":
     _get_rails("input"); _get_rails("output")     # proves both rails build; no model call
     print("Both rails built.\n")
     run_guardrail_tests(with_model_calls=False)
+    test_stopped_case_stays_on_record()
 else:
     print(f"Skipped: SECTIONS is '{SECTIONS}'")
 

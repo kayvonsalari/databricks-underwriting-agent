@@ -12,10 +12,16 @@ CREATE TABLE IF NOT EXISTS workspace.underwriting.applicants (
   monthly_mortgage_payment DOUBLE,
   loan_amount DOUBLE,
   property_value DOUBLE,
-  credit_score INT
+  credit_score INT,
+  -- Written by notebook version 5: 'processed', or 'not processed: <why>' when a
+  -- guard stopped the case. A stopped case keeps its row but has no figures.
+  status STRING,
+  status_reason STRING
 );
 
-INSERT INTO workspace.underwriting.applicants VALUES
+INSERT INTO workspace.underwriting.applicants
+  (applicant_id, annual_income, monthly_debts, monthly_mortgage_payment, loan_amount, property_value, credit_score)
+VALUES
   ('A001', 96000, 600, 2000, 300000, 400000, 740),   -- passes all three rules
   ('A002', 60000, 900, 1800, 285000, 300000, 590),   -- fails all three
   ('A003', 84000, 1100, 1900, 340000, 400000, 700);  -- fails one

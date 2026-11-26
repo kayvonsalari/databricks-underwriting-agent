@@ -227,7 +227,8 @@ One related point, because it comes up every time: the AI cannot check its own r
 ## Repository contents
 
 ```
-docs/                                The two diagrams above, and LITELLM.md (cost control)
+docs/                                The two diagrams above, LITELLM.md (cost control) and
+                                     GUARDRAILS.md (guards around the model)
 sql/01_setup.sql                     Schema, tables, policy, documents volume, rule function
 notebook/underwriting_agent.py       Version 1, the original build
 notebook/underwriting_agent_v2.py    Version 2: clean structure, expected answers in one table,
@@ -236,6 +237,9 @@ notebook/underwriting_agent_v3.py    Version 3: packaged as an MLflow model and 
                                      serving endpoint
 notebook/underwriting_agent_v4.py    Version 4: every model call goes through LiteLLM, which
                                      records its cost and enforces a spending limit per run
+notebook/underwriting_agent_v5.py    Version 5: guards around the model. Documents are checked
+                                     for hidden instructions, figures for nonsense, and
+                                     explanations for unfair reasons
 documents/A004/                      Jonas Weber, should be REFERRED
 documents/A005/                      Marek Sobczak, should be APPROVED
 documents/attacks/                   Tomas Neumann (injection), Lena Fischer (forged authority)
@@ -274,3 +278,7 @@ The extraction prompt lives in `prompts/extraction_prompt.txt`; both the noteboo
 ## Controlling cost
 
 Version 4 of the notebook sends every model call through LiteLLM, which records what each call cost and stops the run when a spending limit is reached. What it does, how it was set up and tested, and its limits are in [docs/LITELLM.md](docs/LITELLM.md).
+
+## Guarding the model
+
+Version 5 of the notebook adds three guards. Before the model reads a document, an input rail checks it for hidden instructions; before figures reach the rule function, plain code checks they are sane; before an explanation is shown, an output rail checks it gives no reason based on nationality, age, gender, religion or health. A stopped case stays in the applicants table, marked "not processed" with the reason. What the guards do, how they were set up and tested, and their limits are in [docs/GUARDRAILS.md](docs/GUARDRAILS.md).
