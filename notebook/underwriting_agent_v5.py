@@ -254,9 +254,11 @@ def ask_model(step, applicant_id, messages, **params):
     return response.choices[0].message.content
 
 
-# One case is processed completely or not at all. If the limit is reached part
-# way through, whatever was saved for the applicant in this run is removed, so
-# the applicants table never holds a half-finished case, and the case is marked.
+# One case is processed completely or not at all. If the spending limit is
+# reached part way through, or a guard stops the case, the applicant keeps one
+# row in the applicants table, marked "not processed" with the reason and with
+# no figures in it. So the table never holds a half-finished case, and a
+# stopped application stays on record for audit.
 NOT_PROCESSED = "not processed: budget reached"
 CASE_STATUS = {}
 PROCESSED = "processed"
@@ -284,29 +286,22 @@ def record_stopped_case(applicant_id, status, reason):
         args={"id": applicant_id, "status": status, "reason": reason[:2000]},
     )
 
-def run_case(applicant_id, steps):
+def run_case(applicant_id, steps, on_record=True):
+    """Run one case. `on_record=False` is for steps that are not an application
+    (the connection check, the guardrail tests): a stop there writes no row."""
     try:
         result = steps()
         CASE_STATUS[applicant_id] = "processed"
         return result
-    except BudgetReached as stop:
-        spark.sql(
-            "DELETE FROM workspace.underwriting.applicants WHERE applicant_id = :id",
-            args={"id": applicant_id},
-        )
-        CASE_STATUS[applicant_id] = NOT_PROCESSED
+    except (BudgetReached, CaseStopped) as stop:
+        status = NOT_PROCESSED if isinstance(stop, BudgetReached) else stop.status
+        if on_record:
+            record_stopped_case(applicant_id, status, str(stop))
+        CASE_STATUS[applicant_id] = status
         print(f"\nSTOPPED  {stop}")
-        print(f"STATUS   {applicant_id}: {NOT_PROCESSED}. No decision was recorded for this case.")
-        return None
-    except CaseStopped as stop:
-        # A guard stopped the case. The application stays on record for audit:
-        # one row, marked with the reason, and with no figures in it, so nothing
-        # half-finished or untrusted is kept.
-        record_stopped_case(applicant_id, stop.status, str(stop))
-        CASE_STATUS[applicant_id] = stop.status
-        print(f"\nSTOPPED  {stop}")
-        print(f"STATUS   {applicant_id}: {stop.status}. No decision was recorded for this case; "
-              "the application stays in the applicants table, marked with this status.")
+        print(f"STATUS   {applicant_id}: {status}. No decision was recorded for this case"
+              + ("; the application stays in the applicants table, marked with this status."
+                 if on_record else "."))
         return None
 
 # COMMAND ----------
@@ -566,7 +561,7 @@ ensure_status_columns()
 if SECTIONS != "free":
     run_case("setup", lambda: print(ask_model(
         "connection check", "setup", [{"role": "user", "content": "Reply with the single word: ready"}]
-    )))
+    )), on_record=False)
 else:
     print("Connection check skipped: SECTIONS is 'free', so no model call is made.")
 
@@ -1110,8 +1105,8 @@ def run_guardrail_tests(with_model_calls):
         _note_test("input rail", case, expected, document_blocked("test", case, text))
 
 def test_stopped_case_stays_on_record():
-    """No model call. Two made-up cases are stopped, one by each kind of guard,
-    read back from the table, and then removed again."""
+    """No model call. Three made-up cases are stopped (one by each kind of guard,
+    one by the spending limit), read back from the table, and then removed again."""
     def row(test_id):
         found = spark.sql("SELECT * FROM workspace.underwriting.applicants WHERE applicant_id = :id",
                           args={"id": test_id}).collect()
@@ -1125,12 +1120,25 @@ def test_stopped_case_stays_on_record():
     def poisoned():
         raise InputBlocked("Hidden instructions found in made_up_document.txt.")
 
+    def over_budget():
+        # A half-finished case: its figures are already saved when the limit is hit.
+        save_applicant("TEST-BUDGET", _figures())
+        spent = METER.spent_usd
+        METER.spent_usd = METER.limit_usd          # pretend the limit has been reached
+        try:
+            # ask_model checks the limit first and refuses, so nothing is sent.
+            ask_model("made-up step", "TEST-BUDGET", [{"role": "user", "content": "never sent"}])
+        finally:
+            METER.spent_usd = spent
+            METER.blocked[:] = [b for b in METER.blocked if b["applicant"] != "TEST-BUDGET"]
+
     figure_columns = ["annual_income", "monthly_debts", "monthly_mortgage_payment",
                       "loan_amount", "property_value", "credit_score"]
     cases = [
         ("TEST-FIGURES", lambda: save_applicant("TEST-FIGURES", _figures(loan=900_000_000)),
          FiguresRejected.status, "loan_amount"),
         ("TEST-INPUT", poisoned, InputBlocked.status, "made_up_document.txt"),
+        ("TEST-BUDGET", over_budget, NOT_PROCESSED, "Spending limit reached"),
     ]
     try:
         for test_id, steps, status, reason_part in cases:
@@ -1157,7 +1165,7 @@ def test_stopped_case_stays_on_record():
 
 
 if SECTIONS in ("all", "guardrails"):
-    run_case("guardrail tests", lambda: run_guardrail_tests(with_model_calls=True))
+    run_case("guardrail tests", lambda: run_guardrail_tests(with_model_calls=True), on_record=False)
     test_stopped_case_stays_on_record()
 elif SECTIONS == "free":
     _get_rails("input"); _get_rails("output")     # proves both rails build; no model call
@@ -1186,7 +1194,7 @@ elif SECTIONS == "all":
     run_case("A007", attack_forged_letter)
 
     print("\n=== ATTACK 1: pushy broker insisting on a different figure (A005) ===")
-    run_case("A005-pushy", attack_pushy_broker)
+    run_case("A005-pushy", attack_pushy_broker, on_record=False)
 
     print("\n=== ATTACK 4: hostile applicant ID ===")
     attack_hostile_id()
@@ -1216,7 +1224,7 @@ def test_servable():
     print("score :", local_result["credit_score"])
 
 if SECTIONS == "all":
-    run_case("served", test_servable)
+    run_case("served", test_servable, on_record=False)
 else:
     print(f"Skipped: SECTIONS is '{SECTIONS}'")
 

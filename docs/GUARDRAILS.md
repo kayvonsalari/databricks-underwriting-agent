@@ -22,7 +22,7 @@ The guards never decide a case. They can only stop one or withhold a text. The S
 Two rules hold for all three:
 
 - **They fail closed.** If a rail cannot run, because of an error or because the spending limit was reached, the case stops. It never continues unchecked.
-- **A stopped case stays on record.** The applicant keeps one row in the `applicants` table, marked `not processed` with the reason, and with no figures in it. Nothing untrusted is stored, and the blocked application can still be audited.
+- **A stopped case stays on record.** The applicant keeps one row in the `applicants` table, marked `not processed` with the reason, and with no figures in it. Nothing untrusted is stored, and the blocked application can still be audited. The same now holds for a case stopped by the spending limit, which is marked `not processed: budget reached`. (Version 4 removed such a row; [LITELLM.md](LITELLM.md) describes version 4.)
 
 The two rails are model calls. They go through the same `ask_model` function as every other call in the notebook, so LiteLLM counts them and the per-run spending limit applies to them (see [LITELLM.md](LITELLM.md)).
 
@@ -53,7 +53,7 @@ Version 5 is version 4 with these changes:
 - **Config cell (cell 2).** `GUARDRAILS` turns the guards `"on"` or `"off"`; off gives version 4's behaviour. `FIGURE_LIMITS` holds the ranges for the figures check. `SECTIONS` has two new values: `"guardrails"` (the sample applicant, the guardrail tests and the hidden-instructions attack) and `"free"` (no model call at all).
 - **One guardrails cell (cell 4b).** It holds both rail prompts, the model wrapper that sends NeMo's calls through `ask_model`, and the figures check.
 - **Three hooks.** Extraction screens the documents first. Saving checks the figures first. The case note and the approval record pass through the fairness check before they are returned.
-- **Two new columns.** The first run adds `status` and `status_reason` to the `applicants` table. A processed case is marked `processed`. A stopped case is marked `not processed: hidden instructions found` or `not processed: figures failed validation`, with the detail in `status_reason`.
+- **Two new columns.** The first run adds `status` and `status_reason` to the `applicants` table. A processed case is marked `processed`. A stopped case is marked `not processed: hidden instructions found`, `not processed: figures failed validation` or `not processed: budget reached`, with the detail in `status_reason`.
 - **The rule function is not asked about a stopped case.** A stopped case has a row with no figures. Asked about such a row, the rule function would count every rule as failed and answer DECLINE for an application nobody assessed. The notebook checks the status first and refuses to call it.
 - **Summary.** The last cells list every guard check and the test results, and include them in the MLflow cost run and in the job's return value.
 
@@ -66,9 +66,9 @@ All runs were on 26 November 2026, started from the command line as one-time ser
 | Check | Cases | Result |
 |---|---|---|
 | Figures check | Real figures from the clean sample pass; negative income, zero income, zero loan and a 900 million loan are stopped | 5 of 5 as expected |
-| Stopped case stays on record | Two made-up cases, one stopped by each kind of guard: exactly one row kept (even when stopped twice), marked with the right status, reason recorded, no figures kept, rule function not called | 10 of 10 as expected |
+| Stopped case stays on record | Three made-up cases, one stopped by each kind of guard and one by the spending limit after its figures were already saved: exactly one row kept (even when stopped twice), marked with the right status, reason recorded, no figures kept, rule function not called | 15 of 15 as expected |
 
-The two made-up rows are removed again at the end of the test.
+The three made-up rows are removed again at the end of the test. The spending-limit case is made by telling the meter the limit has been reached; the call is refused before anything is sent.
 
 **Paid run (`SECTIONS = "guardrails"`, limit USD 0.10).** 22 model calls, USD 0.004717 in total.
 
@@ -104,8 +104,7 @@ The paid run was made before the "stays on record" change. That change was teste
 - **Promptfoo tests the model directly, not the agent.** It sends documents straight to the model, so the guards are not in its path. It will only show the input-rail fix once it points at a redeployed endpoint that includes the guards.
 - **The deployed endpoint has no guards.** The servable class is unchanged, and the endpoint keeps running its old code until a new version is registered and deployed.
 - **A message added by a user is not screened.** The input rail checks documents. The "pushy broker" test sends its message beside the documents, and that path is not guarded.
-- **The rule function itself does not know about stopped cases.** The notebook refuses to ask it about one, but anyone calling the SQL function directly for a stopped applicant would get DECLINE, because the row has no figures. Fixing that means changing the rule function, which was out of scope.
-- **A case stopped by the spending limit is still removed, not marked.** Only guard stops keep a row. That behaviour comes from version 4 and was not changed.
+- **Called directly, the rule function would answer DECLINE for a stopped applicant**, because the row has no figures. The notebook prevents this: it checks the status first and does not call the function for a stopped case. The rule function itself was left as it is.
 - **Slow calls happen.** In the feasibility round one model call took 61 seconds against 1 to 5 for the others. The paid run here averaged about 8 seconds per call, so it probably happened again. Version 5 does not time individual calls.
 - **Not tested with guards on:** the other sample applicant, the forged-letter attack, a real case note, and a full run (`SECTIONS = "all"`).
 
