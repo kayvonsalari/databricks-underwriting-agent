@@ -227,13 +227,15 @@ One related point, because it comes up every time: the AI cannot check its own r
 ## Repository contents
 
 ```
-docs/                                The two diagrams above
+docs/                                The two diagrams above, and LITELLM.md (cost control)
 sql/01_setup.sql                     Schema, tables, policy, documents volume, rule function
 notebook/underwriting_agent.py       Version 1, the original build
 notebook/underwriting_agent_v2.py    Version 2: clean structure, expected answers in one table,
                                      one generic checker, approval record, four attacks
 notebook/underwriting_agent_v3.py    Version 3: packaged as an MLflow model and deployed to a
                                      serving endpoint
+notebook/underwriting_agent_v4.py    Version 4: every model call goes through LiteLLM, which
+                                     records its cost and enforces a spending limit per run
 documents/A004/                      Jonas Weber, should be REFERRED
 documents/A005/                      Marek Sobczak, should be APPROVED
 documents/attacks/                   Tomas Neumann (injection), Lena Fischer (forged authority)
@@ -268,3 +270,7 @@ npm run eval
 ```
 
 The extraction prompt lives in `prompts/extraction_prompt.txt`; both the notebook and the tests read that single copy.
+
+## Controlling cost
+
+Version 4 of the notebook sends every model call through LiteLLM, which records what each call cost and stops the run when a spending limit is reached. What it does, how it was set up and tested, and its limits are in [docs/LITELLM.md](docs/LITELLM.md).
