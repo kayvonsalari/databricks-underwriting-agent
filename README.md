@@ -227,8 +227,9 @@ One related point, because it comes up every time: the AI cannot check its own r
 ## Repository contents
 
 ```
-docs/                                The two diagrams above, LITELLM.md (cost control) and
-                                     GUARDRAILS.md (guards around the model)
+docs/                                The two diagrams above, LITELLM.md (cost control),
+                                     GUARDRAILS.md (guards around the model) and TRACING.md
+                                     (one MLflow trace per applicant)
 sql/01_setup.sql                     Schema, tables, policy, documents volume, rule function
 notebook/underwriting_agent.py       Version 1, the original build
 notebook/underwriting_agent_v2.py    Version 2: clean structure, expected answers in one table,
@@ -240,6 +241,8 @@ notebook/underwriting_agent_v4.py    Version 4: every model call goes through Li
 notebook/underwriting_agent_v5.py    Version 5: guards around the model. Documents are checked
                                      for hidden instructions, figures for nonsense, and
                                      explanations for unfair reasons
+notebook/underwriting_agent_v6.py    Version 6: one readable MLflow trace per applicant, with
+                                     every step, guard check and model call inside it
 documents/A004/                      Jonas Weber, should be REFERRED
 documents/A005/                      Marek Sobczak, should be APPROVED
 documents/attacks/                   Tomas Neumann (injection), Lena Fischer (forged authority)
@@ -282,3 +285,7 @@ Version 4 of the notebook sends every model call through LiteLLM, which records 
 ## Guarding the model
 
 Version 5 of the notebook adds three guards. Before the model reads a document, an input rail checks it for hidden instructions; before figures reach the rule function, plain code checks they are sane; before an explanation is shown, an output rail checks it gives no reason based on nationality, age, gender, religion or health. A stopped case stays in the applicants table, marked "not processed" with the reason. What the guards do, how they were set up and tested, and their limits are in [docs/GUARDRAILS.md](docs/GUARDRAILS.md).
+
+## Tracing each case
+
+Version 6 of the notebook records each applicant as one MLflow trace, named after the applicant, with every step inside it in order: loading the documents, each guard check, each model call with its tokens, cost and time, and the rule function's decision. A case stopped by a guard shows as a correct result marked "not processed", not as an error, and slow model calls are marked. What it does, how it was set up and tested, and its limits are in [docs/TRACING.md](docs/TRACING.md).
