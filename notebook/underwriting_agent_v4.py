@@ -62,7 +62,7 @@ PRICE_KEY = _job_parameter("price_key", PRICE_KEY)
 RUN_BUDGET_USD = float(_job_parameter("run_budget_usd", RUN_BUDGET_USD))
 SECTIONS = _job_parameter("sections", SECTIONS)
 
-print(f"model {MODEL} | priced as {PRICE_KEY} | limit USD {RUN_BUDGET_USD:.2f} per run | sections: {SECTIONS}")
+print(f"model {MODEL} | priced as {PRICE_KEY} | limit USD {RUN_BUDGET_USD:g} per run | sections: {SECTIONS}")
 
 # COMMAND ----------
 
@@ -112,6 +112,11 @@ class BudgetReached(Exception):
     """Raised instead of making a model call once the run's limit is reached."""
 
 
+def usd(amount):
+    """Two decimals for ordinary amounts, six for a limit set very low on purpose."""
+    return f"USD {amount:.2f}" if amount >= 0.01 else f"USD {amount:.6f}"
+
+
 class CostMeter:
     def __init__(self, limit_usd, price_key, price_override=None):
         if price_override:
@@ -129,7 +134,11 @@ class CostMeter:
         self.blocked = []
         # A limit only works if calls have a price. A model LiteLLM cannot price
         # would cost "0.00" forever and the limit would never block anything.
-        if sum(self._price(1000, 1000)) <= 0:
+        try:
+            priced = sum(self._price(1000, 1000)) > 0
+        except Exception:
+            priced = False
+        if not priced:
             raise ValueError(
                 f"LiteLLM has no price for '{price_key}'. Set PRICE_KEY to a model in its "
                 "price list, or set PRICE_OVERRIDE_USD_PER_MILLION, in the config cell."
@@ -144,8 +153,8 @@ class CostMeter:
         if self.spent_usd >= self.limit_usd:
             self.blocked.append({"applicant": applicant_id, "step": step})
             raise BudgetReached(
-                f"Spending limit reached: USD {self.spent_usd:.6f} spent of USD "
-                f"{self.limit_usd:.2f} allowed for this run. The call for '{step}' "
+                f"Spending limit reached: USD {self.spent_usd:.6f} spent of "
+                f"{usd(self.limit_usd)} allowed for this run. The call for '{step}' "
                 f"({applicant_id}) was not made."
             )
 
@@ -178,7 +187,7 @@ class CostMeter:
         print(f"COST THIS RUN (model {MODEL}, priced as {self.price_key})\n")
         for applicant, t in self.per_applicant().items():
             print(f"  {applicant:<8} {t['calls']} calls | {t['tokens_in']:>6} in {t['tokens_out']:>5} out | USD {t['cost_usd']:.6f}")
-        print(f"\n  RUN      {len(self.calls)} calls | USD {self.spent_usd:.6f} of USD {self.limit_usd:.2f} allowed")
+        print(f"\n  RUN      {len(self.calls)} calls | USD {self.spent_usd:.6f} of {usd(self.limit_usd)} allowed")
         if self.blocked:
             print(f"  BLOCKED  {len(self.blocked)} calls refused after the limit was reached")
 
@@ -817,3 +826,21 @@ with mlflow.start_run(run_name="underwriting_cost"):
          "blocked": METER.blocked, "case_status": CASE_STATUS},
         "cost_per_call.json",
     )
+
+# COMMAND ----------
+
+# 20. RUN: hand the result back. When this notebook is run as a job, this is
+# what the job returns, so the cost and each case's status can be read without
+# opening the notebook. Run by hand, it just prints the same summary and stops.
+
+dbutils.notebook.exit(json.dumps({
+    "model": MODEL,
+    "price_key": METER.price_key,
+    "run_budget_usd": METER.limit_usd,
+    "total_cost_usd": METER.spent_usd,
+    "budget_reached": METER.spent_usd >= METER.limit_usd,
+    "calls": METER.calls,
+    "per_applicant": METER.per_applicant(),
+    "blocked": METER.blocked,
+    "case_status": CASE_STATUS,
+}, default=str))
